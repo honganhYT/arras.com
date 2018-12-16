@@ -1,13 +1,170 @@
-/*global require, console*/
+//lets play the music
+var gamemusic = new Audio('Game_Music.mp3');
+gamemusic.play();
+console.log('Starting music');
+
+/*global require, console*/ 
 /*jshint -W097*/
 /*jshint browser: true*/
 "use strict";
 
 // Fundamental requires <3
-var global = require('./lib/global');
-var util = require('./lib/util');
+//var global = require('./lib/global');
+//var util = require('./lib/util');
 
-// Get color
+//imported manualy cause stuffs going wrong
+
+var global = {
+    // Keys and other mathematical constants
+    KEY_ESC: 27,
+    KEY_ENTER: 13,
+    KEY_CHAT: 9,
+    KEY_FIREFOOD: 119,
+    //KEY_SPLIT: 32,
+    KEY_LEFT: 65,
+    KEY_UP: 87,
+    KEY_RIGHT: 68,
+    KEY_DOWN: 83,
+    KEY_LEFT_ARROW: 37,
+    KEY_UP_ARROW: 38,
+    KEY_RIGHT_ARROW: 39,
+    KEY_DOWN_ARROW: 40,
+    KEY_AUTO_SPIN: 67,
+    KEY_AUTO_FIRE: 69,
+    KEY_OVER_RIDE: 82,
+    KEY_UPGRADE_ATK: 49,
+    KEY_UPGRADE_HTL: 50,
+    KEY_UPGRADE_SPD: 51,
+    KEY_UPGRADE_STR: 52,
+    KEY_UPGRADE_PEN: 53,
+    KEY_UPGRADE_DAM: 54,
+    KEY_UPGRADE_RLD: 55,
+    KEY_UPGRADE_MOB: 56,
+    KEY_UPGRADE_RGN: 57,
+    KEY_UPGRADE_SHI: 48,
+    KEY_UPGRADE_DES: 189,
+    KEY_MOUSE_0: 32,
+    KEY_MOUSE_1: 86,
+    KEY_MOUSE_2: 16,
+    KEY_LEVEL_UP: 78,
+    KEY_FUCK_YOU: 192,
+    KEY_TP: 79,
+    KEY_CUPCAKE: 186,
+    KEY_GODM: 77,
+
+    // Canvas
+    screenWidth: window.innerWidth,
+    screenHeight: window.innerHeight,
+    gameWidth: 0,
+    gameHeight: 0,
+    xoffset: -0,
+    yoffset: -0,
+    gameStart: false,
+    disconnected: false,
+    died: false,
+    kicked: false,
+    continuity: false,
+    startPingTime: 0,
+    toggleMassState: 0,
+    backgroundColor: '#f2fbff',
+    lineColor: '#000000',
+};
+
+var submitToLocalStorage = name => {
+    localStorage.setItem(name + 'Value', document.getElementById(name).value);
+    localStorage.setItem(name + 'Checked', document.getElementById(name).checked);
+    return false;
+};
+var retrieveFromLocalStorage = name => {
+    document.getElementById(name).value = localStorage.getItem(name + 'Value');
+    document.getElementById(name).checked = localStorage.getItem(name + 'Checked') === 'true';
+    return false;
+};
+var handleLargeNumber = (a, cullZeroes = false) => {
+    if (cullZeroes && a == 0) {
+        return '';
+    }
+
+    if (a < Math.pow(10, 3)) {
+        return '' + a.toFixed(0);
+    }
+
+    if (a < Math.pow(10, 6)) {
+        return (a / Math.pow(10, 3)).toFixed(2) + "k";
+    }
+
+    if (a < Math.pow(10, 9)) {
+        return (a / Math.pow(10, 6)).toFixed(2) + "m";
+    }
+
+    if (a < Math.pow(10, 12)) {
+        return (a / Math.pow(10, 9)).toFixed(2) + "b";
+    }
+
+    if (a < Math.pow(10, 15)) {
+        return (a / Math.pow(10, 12)).toFixed(2) + "t";
+    }
+
+    return (a / Math.pow(10, 15)).toFixed(2) + "q";
+
+};
+var timeForHumans = x => {
+    // ought to be in seconds
+    let seconds = x % 60;
+    x /= 60;
+    x = Math.floor(x);
+    let minutes = x % 60;
+    x /= 60;
+    x = Math.floor(x);
+    let hours = x % 24;
+    x /= 24;
+    x = Math.floor(x);
+    let days = x;
+    let y = '';
+
+    function weh(z, text) {
+        if (z) {
+            y = y + ((y === '') ? '' : ', ') + z + ' ' + text + ((z > 1) ? 's' : '');
+        }
+    }
+    weh(days, 'day');
+    weh(hours, 'hour');
+    weh(minutes, 'minute');
+    weh(seconds, 'second');
+    if (y === '') {
+        y = 'be a noob';
+    }
+    return y;
+};
+var addArticle = string => {
+    return (/[aeiouAEIOU]/.test(string[0])) ? 'an ' + string : 'a ' + string;
+};
+var formatLargeNumber = x => {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+var pullJSON = filename => {
+    let request = new XMLHttpRequest();
+    let url = "/json/" + filename + ".json?v=" + VERSION;
+    // Set up the request
+    console.log("Loading JSON from " + url);
+    request.responseType = 'json';
+    // Return a promise
+    return new Promise((resolve, reject) => {
+        request.open('GET', url);
+        request.onload = () => {
+            resolve(request.response);
+            console.log('JSON load complete.');
+        };
+        request.onerror = () => {
+            reject(request.statusText);
+            console.log('JSON load failed.');
+            console.log(request.statusText);
+        };
+        request.send();
+    });
+};
+
+//Get color
 var config = {
     graphical: {
         screenshotMode: false,
@@ -31,7 +188,7 @@ var config = {
     },
 };
 var color = {};
-util.pullJSON('color').then(data => color = data);
+pullJSON('color').then(data => color = data);
 
 // Color functions
 let mixColors = (() => {
@@ -103,7 +260,28 @@ function getColor(colorNumber) {
             return color.white;
         case 19:
             return color.guiblack;
-
+        case 20:
+            return '#800000';
+         case 21:
+            return '#00cc00';
+         case 22:
+            return '#ccffff';
+         case 23:
+            return '#009900'; 
+         case 24:
+            return '#7399d6';
+         case 25:
+            return '#4286f4'; 
+         case 26:
+            return '#90EE90';
+         case 27:
+            return '#5d9947';
+         case 28:
+            return '#ff8c00';
+         case 29:
+            return '#ff6030';
+         case 30:
+        return  '#ffff00';
         default:
             return '#FF0000';
     }
@@ -118,14 +296,52 @@ function getColorDark(givenColor) {
 function getZoneColor(cell, real) {
     switch (cell) {
         case 'bas1':
+        case 'bap1':
+        case 'ctf1':
             return color.blue;
         case 'bas2':
+        case 'bap2':
+        case 'ctf2':
             return color.green;
         case 'bas3':
+        case 'bap3':
+        case 'ctf3':
             return color.red;
         case 'bas4':
+        case 'bap4':
+        case 'ctf4':
             return color.pink;
-            //case 'nest': return (real) ? color.purple : color.lavender;     
+        case 'bas5':
+        case 'bap5':
+        case 'ctf5':
+            return color.yellow;
+        case 'ctfX':
+            return '#000000';
+        case 'roid':
+            return color.dgrey;
+        case 'zone':
+            return '#800000';
+        case 'fore':
+            return  '#00cc00';
+        case 'snow':
+            return  '#ccffff';
+        case 'watr':
+            return  '#a8e8f0';
+        case 'dung':
+            return  '#7399d6';
+        case 'heal':
+            return  '#90EE90';
+        case 'lava':
+            return  '#ff6030';
+        case 'test':
+            return  '#ffff00';  
+        case 'nest':
+            return (real) ? color.purple : color.lavender;
+			case 'movl':
+			case 'movr':
+			case 'movd':
+			case 'movu':
+            return color.vlgrey
         default:
             return (real) ? color.white : color.lgrey;
     }
@@ -143,7 +359,7 @@ function setColor(context, givenColor) {
 
 // Get mockups <3
 var mockups = [];
-util.pullJSON('mockups').then(data => mockups = data);
+pullJSON('mockups').then(data => mockups = data);
 // Mockup functions
 function getEntityImageFromMockup(index, color = mockups[index].color) {
     let mockup = mockups[index];
@@ -268,7 +484,7 @@ global.clickables = (() => {
     })();
     return {
         stat: Region(10),
-        upgrade: Region(8),
+        upgrade: Region(400),
         hover: Region(1),
         skipUpgrades: Region(1),
     };
@@ -405,6 +621,19 @@ var gui = {
                     'Shield Regeneration',
                     'Shield Capacity'
                 ];
+            case 7:
+                return [
+                    'Body Damage',
+                    'Max Health',
+                    'Bullet Speed',
+                    'Sword Durability',
+                    'Sword Penetration',
+                    'Sword Damage',
+                    'Sword Persistence',
+                    'Movement Speed',
+                    'Shield Regeneration',
+                    'Shield Capacity',
+                ];
             default:
                 return [
                     'Body Damage',
@@ -416,7 +645,7 @@ var gui = {
                     'Reload',
                     'Movement Speed',
                     'Shield Regeneration',
-                    'Shield Capacity'
+                    'Shield Capacity',
                 ];
         }
     },
@@ -605,27 +834,24 @@ global.time = 0;
 
 // Window setup <3
 global.mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
-var serverName = 'Unknown Server';
+var serverName = '6tdm mode';
 window.onload = () => {
     // Server name stuff
     switch (window.location.hostname) {
-        case '139.162.69.30':
-            serverName = '🇯🇵 arras-linode-tokyo';
-            break;
-        case '172.104.9.164':
-            serverName = '🇺🇸 arras-linode-newark';
-            break;
+        case 'arras.surge.sh/beta': serverName = '🇯🇵 arras-linode-tokyo'; break;
+      case '': serverName = '🇺🇸 arras-linode-newark'; break;
     }
-    document.getElementById('serverName').innerHTML = '<h4 class="nopadding">' + serverName + '</h4>';
+  document.getElementById('serverName').innerHTML = '<h4 class="nopadding">' + serverName + '</h4>';
+  
     // Save forms
-    util.retrieveFromLocalStorage('playerNameInput');
-    util.retrieveFromLocalStorage('playerKeyInput');
-    util.retrieveFromLocalStorage('optScreenshotMode');
-    util.retrieveFromLocalStorage('optPredictive');
-    util.retrieveFromLocalStorage('optFancy');
-    util.retrieveFromLocalStorage('optColors');
-    util.retrieveFromLocalStorage('optNoPointy');
-    util.retrieveFromLocalStorage('optBorders');
+    retrieveFromLocalStorage('playerNameInput');
+    retrieveFromLocalStorage('playerKeyInput');
+    retrieveFromLocalStorage('optScreenshotMode');
+    retrieveFromLocalStorage('optPredictive');
+    retrieveFromLocalStorage('optFancy');
+    retrieveFromLocalStorage('optColors');
+    retrieveFromLocalStorage('optNoPointy');
+    retrieveFromLocalStorage('optBorders');
     // Set default theme
     if (document.getElementById('optColors').value === '') {
         document.getElementById('optColors').value = 'normal';
@@ -649,7 +875,239 @@ window.onload = () => {
 };
 
 // Prepare canvas stuff
-var Canvas = require('./canvas');
+var Canvas = class Canvas {
+    constructor(params) {
+        this.directionLock = false;
+        this.target = global.target;
+        this.reenviar = true;
+        this.socket = global.socket;
+        this.directions = [];
+        var self = this;
+
+        this.cv = document.getElementById('gameCanvas');
+        this.cv.width = global.screenWidth;
+        this.cv.height = global.screenHeight;
+        this.cv.addEventListener('mousemove', this.gameInput, false);
+        this.cv.addEventListener('keydown', this.keyboardDown, false);
+        this.cv.addEventListener('keyup', this.keyboardUp, false);
+        this.cv.addEventListener("mousedown", this.mouseDown, false);
+        this.cv.addEventListener("mouseup", this.mouseUp, false);
+        this.cv.parent = self;
+        global.canvas = this;
+    }
+
+    keyboardDown(event) {
+        switch (event.keyCode) {
+            case 13:
+                if (global.died) this.parent.socket.talk('s', global.playerName, 0);
+                global.died = false;
+                break; // Enter to respawn
+            case global.KEY_UP_ARROW:
+            case global.KEY_UP:
+                this.parent.socket.cmd.set(0, true);
+                break;
+            case global.KEY_DOWN_ARROW:
+            case global.KEY_DOWN:
+                this.parent.socket.cmd.set(1, true);
+                break;
+            case global.KEY_LEFT_ARROW:
+            case global.KEY_LEFT:
+                this.parent.socket.cmd.set(2, true);
+                break;
+            case global.KEY_RIGHT_ARROW:
+            case global.KEY_RIGHT:
+                this.parent.socket.cmd.set(3, true);
+                break;
+            case global.KEY_MOUSE_0:
+                this.parent.socket.cmd.set(4, true);
+                break;
+            case global.KEY_MOUSE_1:
+                this.parent.socket.cmd.set(5, true);
+                break;
+            case global.KEY_MOUSE_2:
+                this.parent.socket.cmd.set(6, true);
+                break;
+            case global.KEY_LEVEL_UP:
+                this.parent.socket.talk('L');
+                break;
+            case global.KEY_FUCK_YOU:
+                this.parent.socket.talk('0');
+                break;
+            case global.KEY_FIREFOOD:
+                this.parent.socket.talk('P');
+                break
+            }
+        if (!event.repeat) {
+            switch (event.keyCode) {
+                case global.KEY_AUTO_SPIN:
+                    this.parent.socket.talk('t', 0);
+                    break;
+                case global.KEY_AUTO_FIRE:
+                    this.parent.socket.talk('t', 1);
+                    break;
+                case global.KEY_OVER_RIDE:
+                    this.parent.socket.talk('t', 2);
+                    break;
+                case global.KEY_GODM:
+                    this.parent.socket.talk('t', 3);
+                    break;
+                case global.KEY_CHAT:
+                    //this.parent.socket.talk('h');
+                    break;
+                case global.KEY_CUPCAKE:
+                    this.parent.socket.talk('g', 0);
+                    break;
+
+                case global.KEY_TP:
+                    this.parent.socket.talk('g', 1);
+                    break;
+            }
+            if (global.canSkill) {
+                switch (event.keyCode) {
+                    case global.KEY_UPGRADE_ATK:
+                        this.parent.socket.talk('x', 0);
+                        break;
+                    case global.KEY_UPGRADE_HTL:
+                        this.parent.socket.talk('x', 1);
+                        break;
+                    case global.KEY_UPGRADE_SPD:
+                        this.parent.socket.talk('x', 2);
+                        break;
+                    case global.KEY_UPGRADE_STR:
+                        this.parent.socket.talk('x', 3);
+                        break;
+                    case global.KEY_UPGRADE_PEN:
+                        this.parent.socket.talk('x', 4);
+                        break;
+                    case global.KEY_UPGRADE_DAM:
+                        this.parent.socket.talk('x', 5);
+                        break;
+                    case global.KEY_UPGRADE_RLD:
+                        this.parent.socket.talk('x', 6);
+                        break;
+                    case global.KEY_UPGRADE_MOB:
+                        this.parent.socket.talk('x', 7);
+                        break;
+                    case global.KEY_UPGRADE_RGN:
+                        this.parent.socket.talk('x', 8);
+                        break;
+                    case global.KEY_UPGRADE_SHI:
+                        this.parent.socket.talk('x', 9);
+                        break;
+                     case global.KEY_UPGRADE_DES:
+                        this.parent.socket.talk('x', 10);
+                        break;
+                }
+
+            }
+            if (global.canUpgrade) {
+                switch (event.keyCode) {
+                    case global.KEY_CHOOSE_1:
+                        this.parent.socket.talk('U', 0);
+                        break;
+                    case global.KEY_CHOOSE_2:
+                        this.parent.socket.talk('U', 1);
+                        break;
+                    case global.KEY_CHOOSE_3:
+                        this.parent.socket.talk('U', 2);
+                        break;
+                    case global.KEY_CHOOSE_4:
+                        this.parent.socket.talk('U', 3);
+                        break;
+                    case global.KEY_CHOOSE_5:
+                        this.parent.socket.talk('U', 4);
+                        break;
+                    case global.KEY_CHOOSE_6:
+                        this.parent.socket.talk('U', 5);
+                        break;
+                    case global.KEY_CHOOSE_7:
+                        this.parent.socket.talk('U', 6);
+                        break;
+                    case global.KEY_CHOOSE_8:
+                        this.parent.socket.talk('U', 7);
+                        break;
+                }
+            }
+        }
+    }
+    keyboardUp(event) {
+        switch (event.keyCode) {
+            case global.KEY_UP_ARROW:
+            case global.KEY_UP:
+                this.parent.socket.cmd.set(0, false);
+                break;
+            case global.KEY_DOWN_ARROW:
+            case global.KEY_DOWN:
+                this.parent.socket.cmd.set(1, false);
+                break;
+            case global.KEY_LEFT_ARROW:
+            case global.KEY_LEFT:
+                this.parent.socket.cmd.set(2, false);
+                break;
+            case global.KEY_RIGHT_ARROW:
+            case global.KEY_RIGHT:
+                this.parent.socket.cmd.set(3, false);
+                break;
+            case global.KEY_MOUSE_0:
+                this.parent.socket.cmd.set(4, false);
+                break;
+            case global.KEY_MOUSE_1:
+                this.parent.socket.cmd.set(5, false);
+                break;
+            case global.KEY_MOUSE_2:
+                this.parent.socket.cmd.set(6, false);
+                break;
+        }
+    }
+    mouseDown(mouse) {
+        switch (mouse.button) {
+            case 0:
+                let mpos = {
+                    x: mouse.clientX,
+                    y: mouse.clientY,
+                };
+                let statIndex = global.clickables.stat.check(mpos);
+                if (statIndex !== -1) this.parent.socket.talk('x', statIndex);
+                else if (global.clickables.skipUpgrades.check(mpos) !== -1) global.clearUpgrades();
+                else {
+                    let upgradeIndex = global.clickables.upgrade.check(mpos);
+                    if (upgradeIndex !== -1) this.parent.socket.talk('U', upgradeIndex);
+                    else this.parent.socket.cmd.set(4, true);
+                }
+                break;
+            case 1:
+                this.parent.socket.cmd.set(5, true);
+                break;
+            case 2:
+                this.parent.socket.cmd.set(6, true);
+                break;
+        }
+    }
+    mouseUp(mouse) {
+        switch (mouse.button) {
+            case 0:
+                this.parent.socket.cmd.set(4, false);
+                break;
+            case 1:
+                this.parent.socket.cmd.set(5, false);
+                break;
+            case 2:
+                this.parent.socket.cmd.set(6, false);
+                break;
+        }
+    }
+    // Mouse location (we send target information in the heartbeat)
+    gameInput(mouse) {
+        this.parent.target.x = mouse.clientX - this.width / 2;
+        this.parent.target.y = mouse.clientY - this.height / 2;
+        global.target = this.parent.target;
+        global.statHover = global.clickables.hover.check({
+            x: mouse.clientX,
+            y: mouse.clientY,
+        }) === 0;
+    }
+
+}
 window.canvas = new Canvas();
 var c = window.canvas.cv;
 var ctx = c.getContext('2d');
@@ -778,7 +1236,224 @@ var moveCompensation = (() => {
 const socketInit = (() => {
     // Inital setup stuff
     window.WebSocket = window.WebSocket || window.MozWebSocket;
-    const protocol = require('./lib/fasttalk');
+    var encode = (() => {
+        // unsigned 8-bit integer
+        var arrUint8 = new Uint8Array(1);
+        // unsigned 16-bit integer
+        var arrUint16 = new Uint16Array(1);
+        var charUint16 = new Uint8Array(arrUint16.buffer);
+        // unsigned 32-bit integer
+        var arrUint32 = new Uint32Array(1);
+        var charUint32 = new Uint8Array(arrUint32.buffer);
+        // 32-bit float
+        var arrFloat32 = new Float32Array(1);
+        var charFloat32 = new Uint8Array(arrFloat32.buffer);
+        // build some useful internal functions
+        var typeEncoder = (type, number) => {
+            let output = '';
+            switch (type) {
+                case 'RawUint8':
+                    arrUint8[0] = number;
+                    return String.fromCharCode(arrUint8[0]);
+                case 'RawUint16':
+                    arrUint16[0] = number;
+                    return String.fromCharCode(charUint16[0], charUint16[1]);
+                case 'Uint8':
+                    arrUint8[0] = number;
+                    return '0' + String.fromCharCode(arrUint8[0]);
+                case 'Uint16':
+                    arrUint16[0] = number;
+                    return '1' + String.fromCharCode(charUint16[0], charUint16[1]);
+                case 'Uint32':
+                    arrUint32[0] = number;
+                    return '2' + String.fromCharCode(charUint32[0], charUint32[1], charUint32[2], charUint32[3]);
+                case 'Sint8':
+                    arrUint8[0] = -1 - number;
+                    return '3' + String.fromCharCode(arrUint8[0]);
+                case 'Sint16':
+                    arrUint16[0] = -1 - number;
+                    return '4' + String.fromCharCode(charUint16[0], charUint16[1]);
+                case 'Sint32':
+                    arrUint32[0] = -1 - number;
+                    return '5' + String.fromCharCode(charUint32[0], charUint32[1], charUint32[2], charUint32[3]);
+                case 'Float32':
+                    arrFloat32[0] = number;
+                    return '6' + String.fromCharCode(charFloat32[0], charFloat32[1], charFloat32[2], charFloat32[3]);
+                case 'String8':
+                    return '7' + typeEncoder('RawUint16', number.length) + number;
+                case 'String16':
+                    for (let i = 0, strLen = number.length; i < strLen; i++) {
+                        output += typeEncoder('RawUint16', number.charCodeAt(i));
+                    }
+                    return '8' + typeEncoder('RawUint16', output.length) + output;
+                default:
+                    throw new Error('Unknown encoding type.');
+            }
+        };
+        var findType = value => {
+            if (typeof value === 'string') {
+                for (var i = 0; i < value.length; i++) {
+                    if (value.charCodeAt(i) > 255) return 'String16';
+                }
+                return 'String8';
+            }
+            if (typeof value === 'boolean') return 'Uint8';
+            if (typeof value !== 'number') {
+                console.log(value);
+                throw new Error('Unencodable data type');
+            }
+            if (value != Math.round(value)) return 'Float32';
+            if (value < 0) {
+                if (value >= -256) return 'Sint8';
+                if (value >= -65535) return 'Sint16';
+                if (value >= -4294967295) return 'Sint32';
+            } else {
+                if (value < 256) return 'Uint8';
+                if (value < 65535) return 'Uint16';
+                if (value < 4294967295) return 'Uint32';
+            }
+            return 'Float32';
+        };
+        // build the function
+        return (arr, verbose = false) => {
+            let output = arr.splice(0, 1)[0];
+            if (typeof output !== 'string') throw new Error('No identification code!');
+            arr.forEach((value) => {
+                output += typeEncoder(findType(value), value);
+            });
+            let len = output.length;
+            let buffer = new ArrayBuffer(len);
+            let integerView = new Uint8Array(buffer);
+            for (let i = 0; i < len; i++) {
+                integerView[i] = output.charCodeAt(i);
+            }
+            if (verbose) {
+                console.log('OUTPUT: ' + integerView);
+                console.log('RAW OUTPUT: ' + output);
+                console.log('SIZE: ' + len);
+            }
+            return buffer;
+        };
+    })();
+
+    var decode = (() => {
+        // unsigned 8-bit integer (none needed)
+        // unsigned 16-bit integer
+        var arrUint16 = new Uint16Array(1);
+        var charUint16 = new Uint8Array(arrUint16.buffer);
+        // unsigned 32-bit integer
+        var arrUint32 = new Uint32Array(1);
+        var charUint32 = new Uint8Array(arrUint32.buffer);
+        // 32-bit float
+        var arrFloat32 = new Float32Array(1);
+        var charFloat32 = new Uint8Array(arrFloat32.buffer);
+        // build a useful internal function
+        var typeDecoder = (str, type, offset) => {
+            switch (type) {
+                case 'Uint8':
+                    return str.charCodeAt(offset++);
+                case 'Uint16':
+                    for (let i = 0; i < 2; i++) {
+                        charUint16[i] = str.charCodeAt(offset++);
+                    }
+                    return arrUint16[0];
+                case 'Uint32':
+                    for (let i = 0; i < 4; i++) {
+                        charUint32[i] = str.charCodeAt(offset++);
+                    }
+                    return arrUint32[0];
+                case 'Sint8':
+                    return -1 - str.charCodeAt(offset++);
+                case 'Sint16':
+                    for (let i = 0; i < 2; i++) {
+                        charUint16[i] = str.charCodeAt(offset++);
+                    }
+                    return -1 - arrUint16[0];
+                case 'Sint32':
+                    for (let i = 0; i < 4; i++) {
+                        charUint32[i] = str.charCodeAt(offset++);
+                    }
+                    return -1 - arrUint32[0];
+                case 'Float32':
+                    for (let i = 0; i < 4; i++) {
+                        charFloat32[i] = str.charCodeAt(offset++);
+                    }
+                    return arrFloat32[0];
+                default:
+                    throw new Error('Unknown decoding type.');
+            }
+        };
+        // actually decode it 
+        return raw => {
+            try {
+                let intView = new Uint8Array(raw);
+                let str = '';
+                for (let i = 0, len = intView.length; i < len; i++) {
+                    str += String.fromCharCode(intView[i]);
+                }
+                let offset = 1;
+                let output = [str.charAt(0)];
+                while (offset < str.length) {
+                    switch (str[offset++]) {
+                        case '0':
+                            output.push(typeDecoder(str, 'Uint8', offset));
+                            offset++;
+                            break;
+                        case '1':
+                            output.push(typeDecoder(str, 'Uint16', offset));
+                            offset += 2;
+                            break;
+                        case '2':
+                            output.push(typeDecoder(str, 'Uint32', offset));
+                            offset += 4;
+                            break;
+                        case '3':
+                            output.push(typeDecoder(str, 'Sint8', offset));
+                            offset++;
+                            break;
+                        case '4':
+                            output.push(typeDecoder(str, 'Sint16', offset));
+                            offset += 2;
+                            break;
+                        case '5':
+                            output.push(typeDecoder(str, 'Sint32', offset));
+                            offset += 4;
+                            break;
+                        case '6':
+                            output.push(typeDecoder(str, 'Float32', offset));
+                            offset += 4;
+                            break;
+                        case '7':
+                            { // String8
+                                let len = typeDecoder(str, 'Uint16', offset);offset += 2;
+                                output.push(str.slice(offset, offset + len));
+                                offset += len;
+                            }
+                            break;
+                        case '8':
+                            { // String16
+                                let len = typeDecoder(str, 'Uint16', offset);offset += 2;
+                                let arr = str.slice(offset, offset + len);
+                                let buf = new Uint16Array(len / 2);
+                                for (let i = 0; i < len; i += 2) {
+                                    buf[i / 2] = typeDecoder(arr, 'Uint16', i);
+                                }
+                                output.push(String.fromCharCode.apply(null, buf));
+                                offset += len;
+                            }
+                            break;
+                        default:
+                            offset = str.length;
+                            throw new Error('Unknown decoding command. Decoding exited.');
+                    }
+                }
+                return output;
+            } catch (err) {
+                console.log(err);
+                return -1;
+            }
+        };
+    })();
     // This is what we use to figure out what the hell the server is telling us to look at
     const convert = (() => {
         // Make a data crawler
@@ -932,6 +1607,7 @@ const socketInit = (() => {
                                 }
                             }
                             z.drawsHealth = !!(type & 0x02); // force to boolean
+                            z.alpha = get.next() / 255;
                             // Nameplates
                             if (type & 0x04) { // has a nameplate
                                 z.name = get.next();
@@ -1183,7 +1859,9 @@ const socketInit = (() => {
     })();
     // The initialization function (this is returned)
     return port => {
-        let socket = new WebSocket('ws://' + window.location.hostname + ':' + port);
+        console.log("trying to connect to server")
+        let socket = new WebSocket('wss://' + window.location.hostname + ':' + port);
+        console.log("Socket opened")
         // Set up our socket
         socket.binaryType = 'arraybuffer';
         socket.open = false;
@@ -1235,11 +1913,11 @@ const socketInit = (() => {
         socket.talk = (...message) => {
             // Make sure the socket is open before we do anything
             if (!socket.open) return 1;
-            socket.send(protocol.encode(message));
+            socket.send(encode(message));
         };
         // Websocket functions for when stuff happens
         // This is for when the socket first opens
-        socket.onopen = function socketOpen() {
+      socket.onopen = function socketOpen() {
             socket.open = true;
             global.message = 'That token is invalid, expired, or already in use on this server. Please try another one!';
             socket.talk('k', global.playerKey);
@@ -1248,6 +1926,7 @@ const socketInit = (() => {
             socket.ping = (payload) => {
                 socket.talk('p', payload);
             };
+            console.log(socket.ping, global.socket, global.socket.ping)
             socket.commandCycle = setInterval(() => {
                 if (socket.cmd.check()) socket.cmd.talk();
             });
@@ -1255,7 +1934,7 @@ const socketInit = (() => {
         // Handle incoming messages
         socket.onmessage = function socketMessage(message) {
             // Make sure it looks legit.
-            let m = protocol.decode(message.data);
+            let m = decode(message.data);
             if (m === -1) {
                 throw new Error('Malformed packet.');
             }
@@ -1307,7 +1986,7 @@ const socketInit = (() => {
                             setTimeout(() => {
                                 socket.talk('S', getNow());
                             }, 10);
-                            global.message = "Syncing clocks, please do not tab away. " + sync.length + "/10...";
+                               global.message = "Syncing clocks, please do not tab away. " + sync.length + "/10...";
                         } else {
                             // Calculate the clock error
                             sync.sort((e, f) => {
@@ -1364,7 +2043,7 @@ const socketInit = (() => {
                             player.time = camtime + lag.get();
                             metrics.rendergap = camtime - player.lastUpdate;
                             if (metrics.rendergap <= 0) {
-                                console.log('yo some bullshit is up wtf');
+                                console.log('someting happned');
                             }
                             player.lastUpdate = camtime;
                             // Convert the gui and entities
@@ -1461,6 +2140,7 @@ const socketInit = (() => {
         // Notify about errors
         socket.onerror = function socketError(error) {
             console.log('WebSocket error: ' + error);
+            var weberror = error
             global.message = 'Socket error. Maybe another server will work.';
         };
         // Gift it to the rest of the world
@@ -1470,16 +2150,17 @@ const socketInit = (() => {
 
 // This starts the game and sets up the websocket
 function startGame() {
+    console.log("trying to start game")
     // Get options
-    util.submitToLocalStorage('optScreenshotMode');
+    submitToLocalStorage('optScreenshotMode');
     config.graphical.screenshotMode = document.getElementById('optScreenshotMode').checked;
-    util.submitToLocalStorage('optFancy');
+    submitToLocalStorage('optFancy');
     config.graphical.pointy = !document.getElementById('optNoPointy').checked;
-    util.submitToLocalStorage('optNoPointy');
+    submitToLocalStorage('optNoPointy');
     config.graphical.fancyAnimations = !document.getElementById('optFancy').checked;
-    util.submitToLocalStorage('optPredictive');
+    submitToLocalStorage('optPredictive');
     config.lag.unresponsive = document.getElementById('optPredictive').checked;
-    util.submitToLocalStorage('optBorders');
+    submitToLocalStorage('optBorders');
     switch (document.getElementById('optBorders').value) {
         case 'normal':
             config.graphical.darkBorders = config.graphical.neon = false;
@@ -1496,26 +2177,30 @@ function startGame() {
             config.graphical.darkBorders = config.graphical.neon = true;
             break;
     }
-    util.submitToLocalStorage('optColors');
+    submitToLocalStorage('optColors');
     let a = document.getElementById('optColors').value;
     color = color[(a === '') ? 'normal' : a];
     // Other more important stuff
     let playerNameInput = document.getElementById('playerNameInput');
     let playerKeyInput = document.getElementById('playerKeyInput');
     // Name and keys
-    util.submitToLocalStorage('playerNameInput');
-    util.submitToLocalStorage('playerKeyInput');
+    submitToLocalStorage('playerNameInput');
+    submitToLocalStorage('playerKeyInput');
     global.playerName = player.name = playerNameInput.value;
     global.playerKey = playerKeyInput.value.replace(/(<([^>]+)>)/ig, '').substring(0, 64);
+    console.log("Loaded info from local stroage")
     // Change the screen
     global.screenWidth = window.innerWidth;
     global.screenHeight = window.innerHeight;
     document.getElementById('startMenuWrapper').style.maxHeight = '0px';
     document.getElementById('gameAreaWrapper').style.opacity = 1;
+    console.log("Changed the screen")
     // Set up the socket
     if (!global.socket) {
-        global.socket = socketInit(3000);
+        global.socket = socketInit('');
     }
+    console.log("tried opening a socket.....")
+    console.log(global.socket)
     if (!global.animLoopHandle) {
         animloop();
     }
@@ -1543,7 +2228,7 @@ const measureText = (() => {
     return (text, fontSize, twod = false) => {
         fontSize += config.graphical.fontSizeBoost;
         var w, h;
-        div.style.font = 'bold ' + fontSize + 'px Ubuntu';
+        div.style.font = 'bold ' + fontSize + 'px Segoe UI';
         div.style.padding = '0';
         div.style.margin = '0';
         div.style.position = 'absolute';
@@ -1671,7 +2356,7 @@ const TextObj = (() => {
                     yy = tctx.canvas.height / 2;
                     // Draw it
                     tctx.lineWidth = offset;
-                    tctx.font = 'bold ' + size + 'px Ubuntu';
+                    tctx.font = 'bold ' + size + 'px Segoe UI';
                     tctx.textAlign = align;
                     tctx.textBaseline = 'middle';
                     tctx.strokeStyle = color.black;
@@ -1734,7 +2419,7 @@ const drawEntity = (() => {
         context.beginPath();
         if (!sides) { // Circle
             context.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        } else if (sides < 0) { // Star
+        } else if (sides < 0) { // Bent Sides
             if (config.graphical.pointy) context.lineJoin = 'miter';
             let dip = 1 - (6 / sides / sides);
             sides = -sides;
@@ -1752,7 +2437,18 @@ const drawEntity = (() => {
                 };
                 context.quadraticCurveTo(c.x, c.y, p.x, p.y);
             }
+
+            } else if (sides == 1) { // Star
+                    sides = 1771;
+            for (let i = 0; i < 5; i++) {
+                let theta = (i / 5) * 4 * Math.PI;
+                let x = centerX + radius * Math.cos(theta + angle+3.14159265);
+                let y = centerY + radius * Math.sin(theta + angle+3.14159265);
+                context.lineTo(x, y);
+            }
+                 
         } else if (sides > 0) { // Polygon
+        context.lineJoin = 'round';
             for (let i = 0; i < sides; i++) {
                 let theta = (i / sides) * 2 * Math.PI;
                 let x = centerX + radius * Math.cos(theta + angle);
@@ -1765,8 +2461,8 @@ const drawEntity = (() => {
         if (fill) {
             context.fill();
         }
-        context.lineJoin = 'round';
     }
+
 
     function drawTrapezoid(context, x, y, length, height, aspect, angle) {
         let h = [];
@@ -1790,16 +2486,17 @@ const drawEntity = (() => {
         context.fill();
     }
     // The big drawing function
-    return (x, y, instance, ratio, scale = 1, rot = 0, turretsObeyRot = false, assignedContext = false, turretInfo = false, render = instance.render) => {
-        let context = (assignedContext) ? assignedContext : ctx;
-        let fade = turretInfo ? 1 : render.status.getFade(),
+    return (x, y, instance, ratio, alpha = 1, scale = 1, rot = 0, turretsObeyRot = false, assignedContext = false, turretInfo = false, render = instance.render) => {
+        let context = assignedContext ? assignedContext : ctx,
+            death = turretInfo ? 1 : render.status.getFade(),
+            fade = (turretInfo ? 1 : render.status.getFade()) * alpha,
             drawSize = scale * ratio * instance.size,
             m = mockups[instance.index],
             xx = x,
             yy = y,
-            source = (turretInfo === false) ? instance : turretInfo;
-        if (render.expandsWithDeath) drawSize *= (1 + 0.5 * (1 - fade));
-        if (config.graphical.fancyAnimations && assignedContext != ctx2 && fade !== 1) {
+            source = turretInfo === false ? instance : turretInfo;
+        if (render.expandsWithDeath) drawSize *= 1 + 0.5 * (1 - death);
+        if (config.graphical.fancyAnimations && assignedContext != ctx2 && fade !== 1 || (!config.graphical.fancyAnimations && fade < 0.05)) {
             context = ctx2;
             context.canvas.width = context.canvas.height = drawSize * m.position.axis + ratio * 20;
             xx = context.canvas.width / 2 - drawSize * m.position.axis * m.position.middle.x * Math.cos(rot) / 4;
@@ -1817,7 +2514,7 @@ const drawEntity = (() => {
                     drawEntity(
                         xx + len * Math.cos(ang),
                         yy + len * Math.sin(ang),
-                        t, ratio, drawSize / ratio / t.size * t.sizeFactor,
+                        t, ratio, 1, drawSize / ratio / t.size * t.sizeFactor,
                         source.turrets[i].facing + turretsObeyRot * rot,
                         turretsObeyRot, context, source.turrets[i], render
                     );
@@ -1868,7 +2565,7 @@ const drawEntity = (() => {
                     drawEntity(
                         xx + len * Math.cos(ang),
                         yy + len * Math.sin(ang),
-                        t, ratio, drawSize / ratio / t.size * t.sizeFactor,
+                        t, ratio, 1, drawSize / ratio / t.size * t.sizeFactor,
                         source.turrets[i].facing + turretsObeyRot * rot,
                         turretsObeyRot, context, source.turrets[i], render
                     );
@@ -1890,7 +2587,10 @@ const drawEntity = (() => {
     };
 })();
 
-function drawHealth(x, y, instance, ratio) {
+function drawHealth(x, y, instance, ratio, alpha) {
+    let fade = instance.render.status.getFade();
+		fade *= fade;
+		ctx.globalAlpha = fade;
     // Draw health bar
     ctx.globalAlpha = Math.pow(instance.render.status.getFade(), 2);
     let size = instance.size * ratio;
@@ -1902,10 +2602,11 @@ function drawHealth(x, y, instance, ratio) {
         let shield = instance.render.shield.get();
         if (health < 1 || shield < 1) {
             let yy = y + 1.1 * realSize + 15;
+            ctx.globalAlpha = alpha * alpha * fade;
             drawBar(x - size, x + size, yy, 3 + config.graphical.barChunk, color.black);
             drawBar(x - size, x - size + 2 * size * health, yy, 3, color.lgreen);
             if (shield) {
-                ctx.globalAlpha = 0.3 + shield * 0.3;
+                ctx.globalAlpha = (0.3 + shield * 0.3) * alpha * alpha * fade;
                 drawBar(x - size, x - size + 2 * size * shield, yy, 3, color.teal);
                 ctx.globalAlpha = 1;
             }
@@ -1914,25 +2615,38 @@ function drawHealth(x, y, instance, ratio) {
     // Draw label
     if (instance.nameplate && instance.id !== gui.playerid) {
         if (instance.render.textobjs == null) instance.render.textobjs = [TextObj(), TextObj()];
+        ctx.globalAlpha = alpha;
         if (instance.name !== '\u0000') {
             instance.render.textobjs[0].draw(
                 instance.name,
                 x, y - realSize - 30, 16, color.guiwhite, 'center'
             );
             instance.render.textobjs[1].draw(
-                util.handleLargeNumber(instance.score, true),
+                handleLargeNumber(instance.score, true),
                 x, y - realSize - 16, 8, color.guiwhite, 'center'
             );
         } else {
             instance.render.textobjs[0].draw(
-                'a spoopy 👻',
+                'arrascraft.io',
                 x, y - realSize - 30, 16, color.lavender, 'center'
             );
             instance.render.textobjs[1].draw(
-                util.handleLargeNumber(instance.score, true),
+                handleLargeNumber(instance.score, true),
                 x, y - realSize - 16, 8, color.lavender, 'center'
             );
         }
+        ctx.globalAlpha = 0.75;
+    }
+    if (instance.chattxt) {
+        if (instance.render.textobjs == null) instance.render.textobj = [TextObj()];
+        ctx.globalAlpha = alpha;
+        if (instance.chattxt !== '\u0000') {
+            instance.render.textobjs[0].draw(
+                instance.chattxt,
+                x, y - realSize - 30, 16, color.red, 'center'
+            );
+        }
+        ctx.globalAlpha = 0.75;
     }
 }
 
@@ -2069,6 +2783,7 @@ const gameDraw = (() => {
             TextObj(),
             TextObj(),
             TextObj(),
+            TextObj(),
         ],
         skillKeys: [
             TextObj(),
@@ -2081,8 +2796,10 @@ const gameDraw = (() => {
             TextObj(),
             TextObj(),
             TextObj(),
+            TextObj(),
         ],
         skillValues: [
+            TextObj(),
             TextObj(),
             TextObj(),
             TextObj(),
@@ -2129,8 +2846,394 @@ const gameDraw = (() => {
             TextObj(),
             TextObj(),
             TextObj(),
-        ],
-        upgradeKeys: [
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
+            TextObj(),
             TextObj(),
             TextObj(),
             TextObj(),
@@ -2187,6 +3290,7 @@ const gameDraw = (() => {
                     ctx.globalAlpha = 1;
                     ctx.fillStyle = (config.graphical.screenshotMode) ? color.guiwhite : color.white;
                     ctx.fillRect(left, top, right - left, bottom - top);
+                  
                     ctx.globalAlpha = 0.3;
                     ctx.fillStyle = (config.graphical.screenshotMode) ? color.guiwhite : getZoneColor(cell, true);
                     ctx.fillRect(left, top, right - left, bottom - top);
@@ -2231,7 +3335,7 @@ const gameDraw = (() => {
                     y = (instance.id === gui.playerid) ? 0 : ratio * instance.render.y - py;
                 x += global.screenWidth / 2;
                 y += global.screenHeight / 2;
-                drawEntity(x, y, instance, ratio, 1.1, instance.render.f);
+                drawEntity(x, y, instance, ratio, instance.alpha, 1.1, instance.render.f);
             });
             if (!config.graphical.screenshotMode) {
                 entities.forEach(function entityhealthdrawingloop(instance) {
@@ -2239,7 +3343,7 @@ const gameDraw = (() => {
                         y = (instance.id === gui.playerid) ? 0 : ratio * instance.render.y - py;
                     x += global.screenWidth / 2;
                     y += global.screenHeight / 2;
-                    drawHealth(x, y, instance, ratio);
+                    drawHealth(x, y, instance, ratio, instance.alpha);
                 });
             }
         }
@@ -2406,7 +3510,7 @@ const gameDraw = (() => {
             drawBar(x + len * 0.1, x + len * (0.1 + 0.8 * ((max) ? Math.min(1, gui.__s.getScore() / max) : 1)), y + height / 2, height - 3.5, color.green);
             // Draw the score
             text.score.draw(
-                'Score: ' + util.handleLargeNumber(gui.__s.getScore()),
+                'Score: ' + handleLargeNumber(gui.__s.getScore()),
                 x + len / 2, y + height / 2,
                 height - 2, color.guiwhite, 'center', true
             );
@@ -2474,7 +3578,7 @@ const gameDraw = (() => {
             timingGraph(GRAPHDATA, x, y - 40, len, 30, color.yellow);
             // Text
             text.debug[5].draw(
-                'Prediction: ' + Math.round(GRAPHDATA) + 'ms',
+                'Prediction: ' + ((Math.round(GRAPHDATA * 10)) / 10) + 'ms',
                 x + len, y - 50 - 5 * 14,
                 10, color.guiwhite, 'right'
             );
@@ -2524,7 +3628,7 @@ const gameDraw = (() => {
                 drawBar(x, x + len * shift, y + height / 2, height - 3.5, entry.barcolor);
                 // Leadboard name + score 
                 text.leaderboard[i++].draw(
-                    entry.label + ': ' + util.handleLargeNumber(Math.round(entry.score)),
+                    entry.label + ': ' + handleLargeNumber(Math.round(entry.score)),
                     x + len / 2, y + height / 2,
                     height - 5, color.guiwhite, 'center', true
                 );
@@ -2532,39 +3636,21 @@ const gameDraw = (() => {
                 let scale = height / entry.position.axis,
                     xx = x - 1.5 * height - scale * entry.position.middle.x * 0.707,
                     yy = y + 0.5 * height + scale * entry.position.middle.x * 0.707;
-                drawEntity(xx, yy, entry.image, 1 / scale, scale * scale / entry.image.size, -Math.PI / 4, true);
+                drawEntity(xx, yy, entry.image, 1 / scale, 1, scale * scale / entry.image.size, -Math.PI / 4, true);
                 // Move down
                 y += vspacing + height;
             });
         }
 
-        { // Draw upgrade menu
+         //Draw upgrade menu
+        {
             upgradeMenu.set(0 + (global.canUpgrade || global.upgradeHover));
             let glide = upgradeMenu.get();
             global.clickables.upgrade.hide();
             if (gui.upgrades.length > 0) {
                 global.canUpgrade = true;
-                var getClassUpgradeKey = function(number) {
-                    switch (number) {
-                        case 0:
-                            return 'y';
-                        case 1:
-                            return 'h';
-                        case 2:
-                            return 'u';
-                        case 3:
-                            return 'j';
-                        case 4:
-                            return 'i';
-                        case 5:
-                            return 'k';
-                        case 6:
-                            return 'o';
-                        case 7:
-                            return 'l';
-                    }
-                };
-                let internalSpacing = 8;
+              
+                let internalSpacing = 6;
                 let len = alcoveSize * global.screenWidth / 2 * 1;
                 let height = len;
                 let x = glide * 2 * spacing - spacing;
@@ -2573,7 +3659,7 @@ const gameDraw = (() => {
                 let xxx = 0;
                 let yo = y;
                 let ticker = 0;
-                upgradeSpin += 0.01;
+                upgradeSpin += 0.02;
                 let colorIndex = 10;
                 let i = 0;
                 gui.upgrades.forEach(function drawAnUpgrade(model) {
@@ -2589,25 +3675,19 @@ const gameDraw = (() => {
                     drawGuiRect(x, y, len, height * 0.6);
                     ctx.fillStyle = color.black;
                     drawGuiRect(x, y + height * 0.6, len, height * 0.4);
-                    ctx.globalAlpha = 1;
+                    ctx.globalAlpha = 0.9;
                     // Find offset location with rotation
                     let picture = getEntityImageFromMockup(model, gui.color),
                         position = mockups[model].position,
                         scale = 0.6 * len / position.axis,
                         xx = x + 0.5 * len - scale * position.middle.x * Math.cos(upgradeSpin),
                         yy = y + 0.5 * height - scale * position.middle.x * Math.sin(upgradeSpin);
-                    drawEntity(xx, yy, picture, 1, scale / picture.size, upgradeSpin, true);
+                    drawEntity(xx, yy, picture, 1, 1, scale / picture.size, upgradeSpin, true);
                     // Tank name
                     text.upgradeNames[i - 1].draw(
                         picture.name,
-                        x + 0.9 * len / 2, y + height - 6,
+                        x +  len / 2, y + height - 6,
                         height / 8 - 3, color.guiwhite, 'center'
-                    );
-                    // Upgrade key
-                    text.upgradeKeys[i - 1].draw(
-                        '[' + getClassUpgradeKey(ticker) + ']',
-                        x + len - 4, y + height - 6,
-                        height / 8 - 3, color.guiwhite, 'right'
                     );
                     ctx.strokeStyle = color.black;
                     ctx.globalAlpha = 1;
@@ -2640,7 +3720,6 @@ const gameDraw = (() => {
         metrics.lastrender = getNow();
     };
 })();
-
 const gameDrawDead = (() => {
     let text = {
         taunt: TextObj(),
@@ -2669,17 +3748,16 @@ const gameDrawDead = (() => {
                 ((finalKills[1]) ? finalKills[1] + ' assists' : '') +
                 (((finalKills[0] || finalKills[1]) && finalKills[2]) ? ' and ' : '') +
                 ((finalKills[2]) ? finalKills[2] + ' visitors defeated' : '') :
-                ' A true pacifist') +
+                'Peaceful boi') +
             '.';
     };
-    let getDeath = () => {
+   let getDeath = () => {
         let txt = '';
         if (global.finalKillers.length) {
             txt = '🔪 Succumbed to';
             global.finalKillers.forEach(e => {
-                txt += ' ' + util.addArticle(mockups[e].name) + ' and';
-            });
-            txt = txt.slice(0, -4) + '.';
+                txt += ' ' + addArticle(mockups[e].name) + ' and';
+            }); txt = txt.slice(0, -4) + '.';
         } else {
             txt += '🤷 Well that was kinda dumb huh';
         }
@@ -2695,20 +3773,20 @@ const gameDrawDead = (() => {
             scale = len / position.axis,
             xx = global.screenWidth / 2 - scale * position.middle.x * 0.707,
             yy = global.screenHeight / 2 - 35 + scale * position.middle.x * 0.707;
-        drawEntity(xx - 190 - len / 2, yy - 10, picture, 1.5, 0.5 * scale / picture.realSize, -Math.PI / 4, true);
+        drawEntity(xx - 190 - len / 2, yy - 10, picture, 1.5, 1, 0.5 * scale / picture.realSize, -Math.PI / 4, true);
         text.taunt.draw(
-            'lol you died', x, y - 80, 8, color.guiwhite, 'center'
+           'lol you died', x, y - 80, 8, color.guiwhite, 'center'
         );
         text.level.draw(
-            'Level ' + gui.__s.getLevel() + ' ' + mockups[gui.type].name + '.',
+           'Level ' + gui.__s.getLevel() + ' ' + mockups[gui.type].name + '.', 
             x - 170, y - 30, 24, color.guiwhite
         );
         text.score.draw(
-            'Final score: ' + util.formatLargeNumber(Math.round(global.finalScore.get())),
+           'Final score: ' + formatLargeNumber(Math.round(global.finalScore.get())),
             x - 170, y + 25, 50, color.guiwhite
         );
         text.time.draw(
-            '⌚ Survived for ' + util.timeForHumans(Math.round(global.finalLifetime.get())) + '.',
+            '⌚ Survived for ' + timeForHumans(Math.round(global.finalLifetime.get())) + '.',
             x - 170, y + 55, 16, color.guiwhite
         );
         text.kills.draw(
